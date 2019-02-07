@@ -58,7 +58,14 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['loading'])
+    ...mapGetters(['loading', 'currentUser'])
+  },
+  watch: {
+    currentUser(val) {
+      if (val) {
+        this.$router.push('/');
+      }
+    }
   },
   methods: {
     submit() {
