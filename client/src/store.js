@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 import router from './router';
 
 import { defaultClient as apolloClient } from '@/plugins/apollo';
-import { GET_POSTS, SIGNIN_USER, GET_CURRENT_USER } from './queries';
+import { GET_POSTS, SIGNIN_USER, SIGNUP_USER, GET_CURRENT_USER } from './queries';
 
 Vue.use(Vuex)
 
@@ -11,7 +11,9 @@ export default new Vuex.Store({
   state: {
     posts: [],
     user: null,
-    loading: false
+    loading: false,
+    error: null,
+    authError: null
   },
   mutations: {
     setPosts: (state, posts) => {
@@ -23,6 +25,12 @@ export default new Vuex.Store({
     setLoading: (state, loading) => {
       state.loading = loading;
     },
+    setError: (state, payload) => {
+      state.error = payload;
+    },
+    setAuthError: (state, payload) => {
+      state.authError = payload;
+    }
   },
   actions: {
     getCurrentUser: ({ commit }) => {
@@ -52,6 +60,8 @@ export default new Vuex.Store({
         .finally(() => { commit('setLoading', false); });
     },
     signinUser: ({ commit }, payload) => {
+      commit('setError', null);
+
       localStorage.setItem('token', '');
       commit('setLoading', true);
       apolloClient
@@ -65,6 +75,28 @@ export default new Vuex.Store({
           router.go();
         })
         .catch(err => {
+          commit('setError', err);
+          console.error(err);
+        })
+        .finally(() => { commit('setLoading', false); });
+    },
+    signupUser: ({ commit }, payload) => {
+      commit('setError', null);
+      // console.log(payload);
+      localStorage.setItem('token', '');
+      commit('setLoading', true);
+      apolloClient
+        .mutate({
+          mutation: SIGNUP_USER,
+          variables: payload
+        })
+        .then(({ data }) => {
+          // console.log(data.signinUser);
+          localStorage.setItem('token', data.signupUser.token);
+          router.go();
+        })
+        .catch(err => {
+          commit('setError', err);
           console.error(err);
         })
         .finally(() => { commit('setLoading', false); });
@@ -79,6 +111,8 @@ export default new Vuex.Store({
   getters: {
     posts: state => state.posts,
     loading: state => state.loading,
-    currentUser: state => state.user
+    currentUser: state => state.user,
+    error: state => state.error,
+    authError: state => state.authError
   }
 })

@@ -1,17 +1,30 @@
 <template>
   <v-container text-xs-center mt-5 pt-5>
     <v-layout row wrap>
-      <v-flex xs12 sm6 offset-sm3>
+      <v-flex xs12 sm6 offset-sm3 class="mb-3">
         <h1>Welcome Back</h1>
       </v-flex>
-      <v-flex xs12 sm6 offset-sm3 class="mt-3">
+
+      <!-- Error Alert -->
+      <v-flex v-if="error" xs12 sm6 offset-sm3>
+        <form-alert :message="error.message" />
+      </v-flex>
+ 
+
+      <v-flex xs12 sm6 offset-sm3>
         <v-card color="secondary" dark>
           <v-container grid-list-lg>
-            <v-form @submit.prevent="submit">
+            <v-form 
+              ref="form" 
+              v-model="isFormValid"
+              lazy-validation
+              @submit.prevent="submit"
+            >
               <v-layout row wrap>
                 <v-flex xs12>
                   <v-text-field
                     prepend-icon="face"
+                    :rules="usernameRules"
                     v-model="username"
                     label="Username"
                     type="text"
@@ -21,6 +34,7 @@
                   <v-text-field
                     prepend-icon="extension"
                     v-model="password"
+                    :rules="passwordRules"
                     label="Password"
                     type="password"
                     required />
@@ -30,7 +44,7 @@
                     color="accent" 
                     type="submit"
                     :loading="loading"
-                    :disabled="loading">Signin</v-btn>
+                    :disabled="loading || !isFormValid">Signin</v-btn>
                   <h3>
                     Dont't have an account?
                     <router-link to="/signup">Signup</router-link>
@@ -53,12 +67,21 @@ export default {
   name: 'Signin',
   data() {
     return {
+      isFormValid: true,
       username: '',
-      password: ''
+      password: '',
+      usernameRules: [
+        username => !!username || 'Username is required',
+        username => username.length < 10 || 'Username must be less than 10 chars.'
+      ],
+      passwordRules: [
+        password => !!password || 'Password is required',
+        password => password.length >= 6 || 'Password must be at least 6 chars.'
+      ]
     }
   },
   computed: {
-    ...mapGetters(['loading', 'currentUser'])
+    ...mapGetters(['loading', 'currentUser', 'error'])
   },
   watch: {
     currentUser(val) {
@@ -69,10 +92,12 @@ export default {
   },
   methods: {
     submit() {
-      this.$store.dispatch('signinUser', {
-        username: this.username,
-        password: this.password
-      })
+      if (this.$refs.form.validate()) {
+        this.$store.dispatch('signinUser', {
+          username: this.username,
+          password: this.password
+        })
+      }
     }
   }
 }

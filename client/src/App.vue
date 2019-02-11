@@ -89,6 +89,32 @@
       <transition name="fade">
         <router-view />
       </transition>
+
+      <v-snackbar 
+        color="success"
+        bottom
+        left
+        :timeout="5000"
+        v-model="authSnackbar"
+      >
+        <v-icon dark class="mr-3">check_circle</v-icon>
+        <h3>You are now signed in!</h3>
+        <v-btn dark flat @click="authSnackbar = false">Close</v-btn>
+      </v-snackbar>
+
+      <v-snackbar
+        v-if="authError" 
+        color="info"
+        bottom
+        left
+        :timeout="5000"
+        v-model="authErrorSnackbar"
+      >
+        <v-icon dark class="mr-3">cancel</v-icon>
+        <h3>{{ authError.message }}</h3>
+        <v-btn dark flat to="/signin">Signing</v-btn>
+      </v-snackbar>
+      
     </main>
   </v-app>
 </template>
@@ -100,11 +126,25 @@ export default {
   name: 'App',
   data() {
     return {
-      sideNav: false
+      sideNav: false,
+      authSnackbar: false,
+      authErrorSnackbar: false
+    }
+  },
+  watch: {
+    currentUser(newValue, oldValue) {
+      if (!oldValue) {
+        this.authSnackbar = true;
+      }
+    },
+    authError(value) {
+      if (value !== null) {
+        this.authErrorSnackbar = true;
+      }
     }
   },
   computed: {
-    ...mapGetters(['currentUser']),
+    ...mapGetters(['currentUser', 'authError']),
     navItems() {
       let items = [
         { icon: 'chat', title: 'Posts', link: '/posts' },
