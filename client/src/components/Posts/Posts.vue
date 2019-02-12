@@ -3,7 +3,7 @@
     <v-layout row wrap v-if="infiniteScrollPosts">
       <v-flex xs12 sm6 v-for="post in infiniteScrollPosts.posts" :key="post._id">
         <v-card hover>
-          <v-img :src="post.imageUrl" height="30vh" lazy />
+          <v-img @click.native="goToPost(post._id)" :src="post.imageUrl" height="30vh" lazy />
           <v-card-actions>
             <v-card-title primary>
               <div>
@@ -26,9 +26,9 @@
 
                 <v-list-tile-content>
                   <v-list-tile-title class="text--primary">{{ post.createdBy.username }}</v-list-tile-title>
-                  <v-list-tile-subtitle class="font-weigth-thin">
+                  <v-list-tile-sub-title class="font-weigth-thin">
                     Added {{ post.createdDate }}
-                  </v-list-tile-subtitle>
+                  </v-list-tile-sub-title>
                 </v-list-tile-content>
 
                 <v-list-tile-action>
@@ -50,7 +50,6 @@
         </v-layout>
       </v-flex>
     </v-layout>
-
   </v-container>
 </template>
 
@@ -102,6 +101,9 @@ export default {
           }
         }
       });
+    },
+    goToPost(postId) {
+      this.$router.push(`/posts/${postId}`);
     }
   }
 }
