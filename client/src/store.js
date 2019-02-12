@@ -3,7 +3,13 @@ import Vuex from 'vuex'
 import router from './router';
 
 import { defaultClient as apolloClient } from '@/plugins/apollo';
-import { GET_POSTS, SIGNIN_USER, SIGNUP_USER, GET_CURRENT_USER } from './queries';
+import { 
+  GET_POSTS,
+  ADD_POST,
+  SIGNIN_USER,
+  SIGNUP_USER,
+  GET_CURRENT_USER
+} from './queries';
 
 Vue.use(Vuex)
 
@@ -58,6 +64,42 @@ export default new Vuex.Store({
           console.error(err);
         })
         .finally(() => { commit('setLoading', false); });
+    },
+    addPost: ({ commit }, payload) => {
+      commit('setLoading', true);
+      apolloClient
+        .mutate({
+          mutation: ADD_POST,
+          variables: payload,
+          update: (cache, { data: { addPost } }) => {
+            // read query we want to upate
+            const data = cache.readQuery({ query: GET_POSTS });
+            // Create updated data
+            data.getPosts.unshift(addPost);
+            // Write updated data back to query
+            cache.writeQuery({
+              query: GET_POSTS,
+              data
+            });
+          },
+          // optimistic response ensures data is added inmediately as we specified for the update function
+          optimisticResponse: {
+            __typename: 'Mutation',
+            addPost: {
+              __typename: 'Post',
+              _id: -1,
+              ...payload
+            }
+          }
+        })
+        .then(({ data }) => {
+          console.log(data.addPost);
+          router.push('/');
+        })
+        .catch(err => {
+          console.error(err);
+        })
+        .finally(() => { commit('setLoading', false) });
     },
     signinUser: ({ commit }, payload) => {
       commit('setError', null);
