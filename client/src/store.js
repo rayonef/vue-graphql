@@ -8,7 +8,8 @@ import {
   ADD_POST,
   SIGNIN_USER,
   SIGNUP_USER,
-  GET_CURRENT_USER
+  GET_CURRENT_USER,
+  SEARCH_POSTS
 } from './queries';
 
 Vue.use(Vuex)
@@ -19,7 +20,8 @@ export default new Vuex.Store({
     user: null,
     loading: false,
     error: null,
-    authError: null
+    authError: null,
+    searchResults: []
   },
   mutations: {
     setPosts: (state, posts) => {
@@ -36,7 +38,12 @@ export default new Vuex.Store({
     },
     setAuthError: (state, payload) => {
       state.authError = payload;
-    }
+    },
+    setSearchResults: (state, payload) => {
+      if (payload) {
+        state.searchResults = payload
+      }
+    },
   },
   actions: {
     getCurrentUser: ({ commit }) => {
@@ -64,6 +71,16 @@ export default new Vuex.Store({
           console.error(err);
         })
         .finally(() => { commit('setLoading', false); });
+    },
+    searchPosts: ({ commit }, payload) => {
+      apolloClient.query({
+        query: SEARCH_POSTS,
+        variables: payload
+      }).then(({ data }) => {
+        commit('setSearchResults', data.searchPosts);
+      }).catch(err => {
+        console.log(err);
+      });
     },
     addPost: ({ commit }, payload) => {
       commit('setLoading', true);
@@ -152,6 +169,7 @@ export default new Vuex.Store({
   },
   getters: {
     posts: state => state.posts,
+    searchResults: state => state.searchResults,
     loading: state => state.loading,
     currentUser: state => state.user,
     error: state => state.error,

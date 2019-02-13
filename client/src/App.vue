@@ -40,7 +40,7 @@
       </v-list>
     </v-navigation-drawer>
     <!-- Toolbar -->
-    <v-toolbar color="primary" dark>
+    <v-toolbar color="primary" dark style="z-index: 8;">
       <v-toolbar-side-icon @click="sideNav = !sideNav" />
       <v-toolbar-title class="hidden-xs-only">
         <router-link to="/" tag="span" style="cursor: pointer">
@@ -51,12 +51,29 @@
       <v-spacer />
 
       <v-text-field 
+        v-model="searchTerm"
+        @input="handleSearchPosts"
         flex 
         prepend-icon="search"
         placeholder="Search post"
         color="accent"
         single-line
         hide-details />
+
+        <v-card dark v-if="searchResults.length" id="search__card">
+          <v-list>
+            <v-list-tile @click="goToSearchResult(result._id)" v-for="result in searchResults" :key="result._id">
+              <v-list-tile-title>
+                {{ result.title }} - 
+                <span class="font-weight-thin">{{ formatDescription(result.description) }}</span>
+              </v-list-tile-title>
+
+              <v-list-tile-action v-if="checkIfUserFavorite(result._id)">
+                <v-icon>favorite</v-icon>
+              </v-list-tile-action>
+            </v-list-tile>
+          </v-list>
+        </v-card>
 
         <v-spacer />
 
@@ -129,11 +146,12 @@ export default {
       sideNav: false,
       authSnackbar: false,
       authErrorSnackbar: false,
-      badgeAnimated: false
+      badgeAnimated: false,
+      searchTerm: ''
     }
   },
   computed: {
-    ...mapGetters(['currentUser', 'authError', 'userFavorites']),
+    ...mapGetters(['currentUser', 'authError', 'userFavorites', 'searchResults']),
     navItems() {
       let items = [
         { icon: 'chat', title: 'Posts', link: '/posts' },
@@ -184,6 +202,22 @@ export default {
   methods: {
     signout() {
       this.$store.dispatch('signoutUser')
+    },
+    goToSearchResult(resultId) {
+      this.searchTerm = '';
+      this.$router.push(`/posts/${resultId}`);
+      this.$store.commit('setSearchResults', []);
+    },
+    formatDescription(desc) {
+      return desc.length < 30 ? `${desc.slice(0, 30)}...` : desc;
+    },
+    checkIfUserFavorite(resultId) {
+      return this.userFavorites && this.userFavorites.some(fave => fave._id === resultId);
+    },
+    handleSearchPosts() {
+      this.$store.dispatch('searchPosts', {
+        searchTerm: this.searchTerm
+      });
     }
   }
 }
@@ -204,6 +238,14 @@ export default {
 .fade-leave-active {
   opacity: 0;
   transform: translateY(-25px);
+}
+
+#search__card {
+  position: absolute;
+  width: 100vw;
+  z-index: 8;
+  top: 100%;
+  left: 0%;
 }
 
 .bounce {
