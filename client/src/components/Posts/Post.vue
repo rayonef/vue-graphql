@@ -74,7 +74,7 @@
                   </v-list-tile-title>
                   <v-list-tile-sub-title>
                     {{ message.messageUser.username }}
-                     <span class="grey--text text--lighten-1 hidden-xs-only">{{ message.messageDate }}</span>
+                     <span class="grey--text text--lighten-1 hidden-xs-only">{{ message.messageDate|fromNow }}</span>
                   </v-list-tile-sub-title> 
                 </v-list-tile-content>
 
